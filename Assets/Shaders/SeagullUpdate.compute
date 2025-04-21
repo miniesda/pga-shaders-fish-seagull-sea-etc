@@ -1,0 +1,119 @@
+#pragma kernel SeagullUpdate
+
+struct Seagull {
+    float3 position;
+    float3 velocity;
+    float3 acceleration;
+};
+
+// Parameters
+float DeltaTime;
+float PathRadius;
+float3 PathCenter;
+float AvoidanceRadius;    // Radius for collision avoidance
+float FlockingRadius;     // Radius for flocking behavior
+float MaxSpeed;
+float MaxForce;
+float PathFollowWeight;
+float AvoidanceWeight;
+float FlockingWeight;
+float avoidWaterWeight;
+float avoidCenterWeight;
+float2 centerBounds;
+float waterHeight; 
+
+// Buffers
+RWStructuredBuffer<Seagull> Seagulls;
+uint SeagullCount; // Added to pass the count from CPU
+
+[numthreads(64, 1, 1)]
+void SeagullUpdate(uint3 id : SV_DispatchThreadID) {
+    if (id.x >= SeagullCount) return;
+    
+    Seagull seagull = Seagulls[id.x];
+    seagull.acceleration = float3(0, 0, 0);
+    
+    // 1. Path following (circular path)
+    float3 toCenter = PathCenter - seagull.position;
+    float distanceToCenter = length(toCenter);
+    float3 pathDirection = normalize(cross(toCenter, float3(0, 1, 0))); // Tangent to circle
+    float3 pathSteer = pathDirection * MaxSpeed - seagull.velocity;
+    pathSteer = normalize(pathSteer) * min(length(pathSteer), MaxForce);
+    seagull.acceleration += pathSteer * PathFollowWeight;
+    
+    // 2. Avoidance and flocking
+    float3 avoidanceForce = float3(0, 0, 0);
+    float3 flockingForce = float3(0, 0, 0);
+    float3 avgFlockDirection = float3(0, 0, 0);
+    float3 avgFlockPosition = float3(0, 0, 0);
+    int flockCount = 0;
+    int avoidCount = 0;
+    
+    [loop]
+    for (uint i = 0; i < SeagullCount; ++i) {
+        if (i == id.x) continue;
+        
+        float3 diff = Seagulls[i].position - seagull.position;
+        float dist = length(diff);
+        
+        // Avoidance behavior
+        if (dist < AvoidanceRadius) {
+            float3 repelDir = -normalize(diff);
+            avoidanceForce += repelDir * (1.0 - saturate(dist / AvoidanceRadius));
+            avoidCount++;
+        }
+        
+        // Flocking behavior
+        if (dist < FlockingRadius) {
+            avgFlockDirection += Seagulls[i].velocity;
+            avgFlockPosition += Seagulls[i].position;
+            flockCount++;
+        }
+    }
+    
+    // Apply avoidance force if needed
+    if (avoidCount > 0) {
+        avoidanceForce /= avoidCount;
+        avoidanceForce = normalize(avoidanceForce) * MaxSpeed - seagull.velocity;
+        avoidanceForce = normalize(avoidanceForce) * min(length(avoidanceForce), MaxForce);
+        seagull.acceleration += avoidanceForce * AvoidanceWeight;
+    }
+    
+    // Apply flocking force if needed
+    if (flockCount > 0) {
+        avgFlockDirection /= flockCount;
+        float3 alignForce = normalize(avgFlockDirection) * MaxSpeed - seagull.velocity;
+        alignForce = normalize(alignForce) * min(length(alignForce), MaxForce);
+        
+        avgFlockPosition /= flockCount;
+        float3 toAvgPos = avgFlockPosition - seagull.position;
+        float3 cohesionForce = normalize(toAvgPos) * MaxSpeed - seagull.velocity;
+        cohesionForce = normalize(cohesionForce) * min(length(cohesionForce), MaxForce);
+        
+        flockingForce = (alignForce + cohesionForce) * 0.5f;
+        flockingForce = normalize(flockingForce) * min(length(flockingForce), MaxForce);
+        seagull.acceleration += flockingForce * FlockingWeight;
+    }
+
+    if (seagull.position.y < waterHeight) {
+        float3 waterAvoidForce = float3(0, 1, 0) * (1.0 - saturate(seagull.position.y / waterHeight));
+        waterAvoidForce = normalize(waterAvoidForce) * MaxSpeed - seagull.velocity;
+        waterAvoidForce = normalize(waterAvoidForce) * min(length(waterAvoidForce), MaxForce);
+        seagull.acceleration += waterAvoidForce * avoidWaterWeight;
+    }
+
+    if (seagull.position.x > centerBounds.x && seagull.position.x < centerBounds.y && seagull.position.z > centerBounds.x && seagull.position.z < centerBounds.y ) {
+        float3 centerAvoidForce = PathCenter + seagull.position;
+        centerAvoidForce = normalize(centerAvoidForce) * MaxSpeed - seagull.velocity;
+        centerAvoidForce = normalize(centerAvoidForce) * min(length(centerAvoidForce), MaxForce);
+        seagull.acceleration += centerAvoidForce * avoidCenterWeight;
+    }
+    
+    // Update velocity and position
+    seagull.velocity += seagull.acceleration * DeltaTime;
+    seagull.velocity = normalize(seagull.velocity) * min(length(seagull.velocity), MaxSpeed);
+    seagull.position += seagull.velocity * DeltaTime;
+    
+    // Write back updated seagull
+    Seagulls[id.x] = seagull;
+}

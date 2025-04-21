@@ -1,0 +1,169 @@
+// FishFlocking.compute
+#pragma kernel FishUpdate
+
+struct FishData
+{
+    float3 position;
+    float3 velocity;
+    float3 acceleration;
+    float targetDepth;
+};
+
+RWStructuredBuffer<FishData> Fishes;
+
+int FishCount;
+float DeltaTime;
+float SwimSpeed;
+float TurnSpeed;
+float AvoidanceRadius;
+float SchoolRadius;
+float MaxDepth;
+float MinDepth;
+float AlignmentWeight;
+float CohesionWeight;
+float SeparationWeight;
+
+// Random number generator (simple hash)
+float rand(float2 co)
+{
+    return frac(sin(dot(co, float2(12.9898, 78.233))) * 43758.5453);
+}
+
+float3 GetRandomDirection(uint fishIndex)
+{
+    float seed = DeltaTime * fishIndex;
+    return normalize(float3(
+        rand(float2(seed, seed + 1.0)) - 0.5,
+        rand(float2(seed + 2.0, seed + 3.0)) - 0.5,
+        rand(float2(seed + 4.0, seed + 5.0)) - 0.5
+    ));
+}
+
+[numthreads(64, 1, 1)]
+void FishUpdate(uint3 id : SV_DispatchThreadID)
+{
+    if (id.x >= FishCount)
+        return;
+    
+    FishData fish = Fishes[id.x];
+    
+    // Reset acceleration
+    fish.acceleration = float3(0, 0, 0);
+    
+    // Initialize flocking vectors
+    float3 alignment = float3(0, 0, 0);
+    float3 cohesion = float3(0, 0, 0);
+    float3 separation = float3(0, 0, 0);
+    
+    int neighborCount = 0;
+    int closeNeighborCount = 0;
+    
+    // Calculate flocking behaviors
+    for (int i = 0; i < FishCount; i++)
+    {
+        if (i == id.x) continue;
+        
+        FishData otherFish = Fishes[i];
+        float3 toOther = otherFish.position - fish.position;
+        float dist = length(toOther);
+        
+        // Only consider fish within school radius
+        if (dist < SchoolRadius)
+        {
+            alignment += otherFish.velocity;
+            cohesion += otherFish.position;
+            neighborCount++;
+            
+            // Avoid fish that are too close
+            if (dist < AvoidanceRadius)
+            {
+                separation -= toOther / (dist * dist + 0.0001f); // Avoid division by zero
+                closeNeighborCount++;
+            }
+        }
+    }
+    
+    // Apply flocking behaviors if we have neighbors
+    if (neighborCount > 0)
+    {
+        alignment = alignment / neighborCount;
+        cohesion = (cohesion / neighborCount) - fish.position;
+        
+        // Normalize and weight the behaviors
+        if (length(alignment) > 0)
+            alignment = normalize(alignment) * AlignmentWeight;
+        
+        if (length(cohesion) > 0)
+            cohesion = normalize(cohesion) * CohesionWeight;
+        
+        if (closeNeighborCount > 0)
+        {
+            separation = normalize(separation) * SeparationWeight;
+        }
+        
+        // Add all forces to acceleration
+        fish.acceleration += alignment + cohesion + separation;
+    }
+    
+    // Add some randomness to movement
+    float3 randomForce = GetRandomDirection(id.x) * 0.1f;
+    fish.acceleration += randomForce;
+    
+    // Depth variation - move toward target depth with some randomness
+    if (abs(fish.position.y - fish.targetDepth) < 0.5f || rand(float2(id.x, DeltaTime)) > 0.99f)
+    {
+        // Choose new target depth occasionally
+        fish.targetDepth = MinDepth + rand(float2(id.x, DeltaTime + 1.0)) * (MaxDepth - MinDepth);
+    }
+    
+    // Apply depth force
+    float depthDirection = sign(fish.targetDepth - fish.position.y);
+    fish.acceleration.y += depthDirection * 0.05f;
+    
+    // Limit acceleration
+    if (length(fish.acceleration) > 2.0f)
+    {
+        fish.acceleration = normalize(fish.acceleration) * 2.0f;
+    }
+    
+    // Update velocity
+    fish.velocity += fish.acceleration * DeltaTime;
+    
+    // Limit speed
+    float currentSpeed = length(fish.velocity);
+    if (currentSpeed > SwimSpeed)
+    {
+        fish.velocity = (fish.velocity / currentSpeed) * SwimSpeed;
+    }
+    else if (currentSpeed < SwimSpeed * 0.5f)
+    {
+        // Maintain minimum speed
+        fish.velocity = normalize(fish.velocity) * SwimSpeed * 0.5f;
+    }
+
+    // Update position
+    fish.position += fish.velocity * DeltaTime;
+
+    if (fish.position.x > 1900.0f || fish.position.x < -1900.0f)
+    {
+        fish.position.x = -fish.position.x;
+    }
+    if (fish.position.z > 1900.0f || fish.position.z < -1900.0f)
+    {
+        fish.position.z = -fish.position.z;
+    }
+    
+    if (fish.position.y > MinDepth)
+    { 
+        fish.position.y = MinDepth;
+        fish.velocity.y = -fish.velocity.y; // Bounce off the surface
+    }
+    else if (fish.position.y < MaxDepth)
+    {
+        fish.position.y = MaxDepth;
+        fish.velocity.y = -fish.velocity.y; // Bounce off the bottom
+    }
+    
+    // Write back to buffer
+    Fishes[id.x] = fish;
+}
