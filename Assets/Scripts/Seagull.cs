@@ -20,7 +20,7 @@ public class Seagull : MonoBehaviour
     {
         rend = GetComponentInChildren<Renderer>();
         rend.material.SetFloat("_TailSpeed", Random.Range(2.0f, 10.0f));
-        rend.material.SetFloat("_TailAmplitude", Random.Range(1.0f, 5.0f));
+        rend.material.SetFloat("_TailAmplitude", Random.Range(2.0f, 10.0f));
 
         CloseShpere.transform.localScale = new Vector3(MaxClose, MaxClose, MaxClose);
         FarShpere.transform.localScale = new Vector3(MaxFar, MaxFar, MaxFar);

@@ -21,7 +21,7 @@ public class Fish : MonoBehaviour
         rend = GetComponentInChildren<Renderer>();
         rend.material.SetColor("_Color", new Color(Random.Range(0.0f, 1.0f), Random.Range(0.0f, 1.0f), Random.Range(0.0f, 1.0f)));
         rend.material.SetFloat("_TailSpeed", Random.Range(0.0f, 10.0f));
-        rend.material.SetFloat("_TailAmplitude", Random.Range(0.0f, 5.0f));
+        rend.material.SetFloat("_BodyMove", Random.Range(1.0f, 10.0f));
 
         CloseShpere.transform.localScale = new Vector3(MaxClose, MaxClose, MaxClose);
         FarShpere.transform.localScale = new Vector3(MaxFar, MaxFar, MaxFar);

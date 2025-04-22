@@ -147,7 +147,7 @@ public class FishManager : MonoBehaviour
                     fishObjects[i].transform.rotation = Quaternion.Slerp(
                         fishObjects[i].transform.rotation,
                         targetRotation,
-                        Time.deltaTime * turnSpeed
+                        Time.deltaTime * 2f
                     );
                 }
                 

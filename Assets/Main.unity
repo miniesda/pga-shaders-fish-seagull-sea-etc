@@ -140,7 +140,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!4 &448254675
 Transform:
   m_ObjectHideFlags: 0
@@ -490,11 +490,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   computeShader: {fileID: 7200000, guid: 56bd1965e3a5b164fb48033f5b927ec3, type: 3}
-  seagullCount: 100
+  seagullCount: 500
   seagullPrefab: {fileID: 4440224666702717942, guid: 99b3561690a968d4e8756baf07ca0d3b, type: 3}
   Debug: 0
   avoidanceRadius: 50
-  flockingRadius: 2000
+  flockingRadius: 500
   waterHeight: 75
   centerBounds: {x: -800, y: 800}
   pathFollowWeight: 3

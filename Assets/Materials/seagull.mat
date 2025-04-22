@@ -62,6 +62,9 @@ Material:
         m_Offset: {x: 0, y: 0}
     m_Ints: []
     m_Floats:
+    - _BodyLength: 0.36
+    - _BodyMove: 15.2
+    - _BodyWidth: 0.5
     - _BumpScale: 1
     - _Cutoff: 0.169
     - _DetailNormalMapScale: 1
@@ -73,11 +76,12 @@ Material:
     - _Mode: 1
     - _OcclusionStrength: 1
     - _Parallax: 0.02
+    - _Size: 66.1
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
-    - _TailAmplitude: 6
-    - _TailSpeed: 3.64
+    - _TailAmplitude: 5
+    - _TailSpeed: 6.55
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:
