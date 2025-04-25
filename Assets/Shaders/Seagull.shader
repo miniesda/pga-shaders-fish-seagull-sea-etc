@@ -81,7 +81,7 @@ Shader "Custom/Seagull"
                 float Size = _Size;
                 float body = 0.05;
 
-                float wave = sin(_Time.y * _TailSpeed) / _TailAmplitude;
+                float wave = pow(sin(_Time.y * _TailSpeed) / _TailAmplitude,2);
 
                 float4 _Offset = float4(-1.5, 0.0, 0.0, 0.0);
 
@@ -97,14 +97,14 @@ Shader "Custom/Seagull"
                     float2(0, 0) 
                 };
 
-                bodyVertices[0] = float3(-BodyWidth, -pow(wave,2), -BodyLength);
-                bodyVertices[1] = float3(-BodyWidth, -pow(wave,2), BodyLength);
-                bodyVertices[2] = float3(-body, -pow(wave,2) / BodyMove, -BodyLength);
-                bodyVertices[3] = float3(-body, -pow(wave,2) / BodyMove, BodyLength);
-                bodyVertices[4] = float3(body, -pow(wave,2) / BodyMove, -BodyLength);
-                bodyVertices[5] = float3(body, -pow(wave,2) / BodyMove, BodyLength);
-                bodyVertices[6] = float3(BodyWidth, -pow(wave,2), -BodyLength);
-                bodyVertices[7] = float3(BodyWidth, -pow(wave,2), BodyLength);
+                bodyVertices[0] = float3(-BodyWidth, -wave, -BodyLength);
+                bodyVertices[1] = float3(-BodyWidth, -wave, BodyLength);
+                bodyVertices[2] = float3(-body, -wave / BodyMove, -BodyLength);
+                bodyVertices[3] = float3(-body, -wave / BodyMove, BodyLength);
+                bodyVertices[4] = float3(body, -wave / BodyMove, -BodyLength);
+                bodyVertices[5] = float3(body, -wave / BodyMove, BodyLength);
+                bodyVertices[6] = float3(BodyWidth, -wave, -BodyLength);
+                bodyVertices[7] = float3(BodyWidth, -wave, BodyLength);
 
                 for (int i = 0; i < 8; i++)
                 {

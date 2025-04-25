@@ -94,21 +94,21 @@ Material:
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
-    - _TessellationDistance: 2000
+    - _TessellationDistance: 5000
     - _TessellationFactorMax: 24
     - _TessellationFactorMin: 6
     - _TessellationUniform: 16
     - _UVSec: 0
     - _WaveAmplitude: 1
     - _WaveFrequency: 1
-    - _WaveHeight: 179
+    - _WaveHeight: 300
     - _WaveLength: 10
     - _WaveSharpness: 1
     - _WaveSpeed: 1
     - _WaveSteepness: 0.5
     - _ZWrite: 1
-    - _levels: 51.3
-    - _maxHeightWhite: 10.69
+    - _levels: 58.3
+    - _maxHeightWhite: 40
     m_Colors:
     - _Color: {r: 0.17007834, g: 0.81273824, b: 0.9245283, a: 1}
     - _Color1: {r: 0, g: 1, b: 1, a: 0.15686275}

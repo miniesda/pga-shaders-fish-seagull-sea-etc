@@ -80,8 +80,8 @@ Material:
     - _SmoothnessTextureChannel: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
-    - _TailAmplitude: 5
-    - _TailSpeed: 6.55
+    - _TailAmplitude: 4.4
+    - _TailSpeed: 1.2
     - _UVSec: 0
     - _ZWrite: 1
     m_Colors:

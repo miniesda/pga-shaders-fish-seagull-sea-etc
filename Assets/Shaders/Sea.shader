@@ -5,12 +5,11 @@ Shader "Custom/TessellatedSeaShader" {
         _TessellationDistance ("Tessellation Distance", Float) = 3000
         _WaveHeight ("Wave Height", Float) = -100
         _WavePattern ("Wave Pattern, Perlin Noise", 2D) = "white" {}
-        _WaveDirection ("Wave Direction", Vector) = (-100,100,0,0)    
+        _WaveDirection ("Wave Direction", Vector) = (-100,100, 0, 0)
+        _Scale ("Scale", Range(0.00000001, 0.001)) = 0.000001
         _Color1 ("Color 1", Color) = (0,0,1,1)
         _Color2 ("Color 2", Color) = (0,1,1,1)    
-        _Scale ("Scale", Range(0.00000001, 0.001)) = 0.000001
         _levels ("Levels", Range(0, 100)) = 0.5
-        _maxHeightWhite ("Max Height White", Float) = 0.5
     }
 
     SubShader {
@@ -59,7 +58,6 @@ Shader "Custom/TessellatedSeaShader" {
             float4 _Color2;
             float _Scale;
             float _levels;
-            float _maxHeightWhite;
             // Vertex shader - pass through data
             appdata vert (appdata v) {
                 return v;
@@ -140,8 +138,8 @@ Shader "Custom/TessellatedSeaShader" {
             // Fragment shader (same as before)
             float4 frag(v2f i) : SV_Target {
 
-                float4 color1 = lerp(_Color1, _Color2, pow((i.worldPos.y + _levels - _maxHeightWhite),2));
-                //float4 color2 = lerp(_Color1, _Color2, pow((i.worldPos.y + _levels - _maxHeightWhite),3));
+                float4 color1 = lerp(_Color1, _Color2, pow((i.worldPos.y + _levels),2));
+                //float4 color2 = lerp(_Color1, _Color2, pow((i.worldPos.y + _levels),3));
 
                 return color1;
             }
